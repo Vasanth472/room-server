@@ -73,7 +73,7 @@ npm install
 This will install:
 - express
 - mongoose
-- bcrypt
+- bcryptjs (pure JS implementation, avoids native binary build issues like "invalid ELF header")
 - jsonwebtoken
 - cors
 - dotenv
@@ -247,6 +247,28 @@ This requires `nodemon` (already in dependencies). It will restart the server wh
   ```
 - If not, start the service or run `mongod`
 
+### "Port already in use" (EADDRINUSE)
+
+- If you see `Error: listen EADDRINUSE: address already in use :::<port>` on startup, some process is already listening on the port (default 3000). Stop the process or use a different `PORT`.
+
+- To find process using the port on Windows PowerShell:
+```powershell
+netstat -ano | findstr :3000
+```
+This prints rows with `PID` — note it.
+
+- Kill it with one of:
+```powershell
+taskkill /PID <pid> /F  # or
+Stop-Process -Id <pid>
+```
+
+- Alternative: start the server on a different port:
+```powershell
+$env:PORT = 3001
+npm start
+```
+
 ### "Authentication failed"
 - Check MONGODB_URI and credentials in `.env`
 - If using Atlas, ensure your IP is whitelisted
@@ -265,6 +287,18 @@ db.members.find()
 ## Production Deployment
 
 For production, consider:
+### Notes about bcrypt/native modules and deployment (Render, Docker, etc.)
+
+- This project uses `bcryptjs` (a pure JavaScript implementation). If you instead use the native `bcrypt` package, you may see errors like "invalid ELF header" when the app was built on a different platform or Node version (e.g., Node v25) or when binaries are not rebuilt in the production environment.
+- Recommended options to avoid those errors:
+  - Use `bcryptjs` (no native binaries) — already used in this project.
+  - If you need to use `bcrypt`, make sure `npm install` runs in the deployment environment (do not copy local `node_modules`), and consider adding `npm rebuild` after install.
+  - Set the Node engine in `package.json` or `.nvmrc` to an LTS version supported by your host (e.g., `18.x`). Render usually respects `engines.node` in `package.json`.
+
+  **Node version guidance:**
+
+  - This project targets Node 18.x (LTS). Running the app on newer Node releases such as Node v22 or Node v25 can cause native module incompatibilities. We recommend pinning Node to 18.x (LTS) by setting `engines.node` in `package.json` and/or including a `.nvmrc` file (already added in this repo).
+
 1. **MongoDB Atlas** (fully managed cloud DB)
 2. **Vercel, Heroku, Railway, or Render** (free Node.js hosting)
 3. Set environment variables on the hosting platform

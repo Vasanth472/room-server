@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const authRoutes = require('./routes/auth');
 const membersRoutes = require('./routes/members');
@@ -97,4 +97,27 @@ app.use('/api/settings', settingsRoutes);
 
 app.get('/', (req, res) => res.json({ ok: true }));
 
-app.listen(port, () => console.log(`Server listening on port ${port}`));
+const server = app.listen(port, () => console.log(`Server listening on port ${port}`));
+
+// Add a helpful error handler; especially helpful for Node/EADDRINUSE issues
+server.on('error', (err) => {
+  if (err && err.code === 'EADDRINUSE') {
+    console.error(`Port ${port} is already in use. Please stop the process using the port or set PORT environment variable to a free port.`);
+    console.error('On Windows, find the PID using: netstat -ano | findstr :<port>');
+    console.error('Then kill it: taskkill /PID <pid> /F  OR  Stop-Process -Id <pid> (PowerShell)');
+    process.exit(1);
+  }
+  // rethrow other errors
+  throw err;
+});
+
+// Log Node version on startup to help diagnose env issues
+console.log('Node.js version:', process.version);
+const nodeMajor = Number(process.version.replace(/^v/, '').split('.')[0]);
+if (isNaN(nodeMajor)) {
+  console.warn('Warning: unable to determine Node version major');
+} else {
+  if (nodeMajor !== 18) {
+    console.warn(`Warning: This project targets Node 18.x (see package.json and .nvmrc). Current Node major version is ${nodeMajor}. Using non-LTS Node versions (>= 22 or others) may cause native module incompatibility. Consider using Node 18 for stability.`);
+  }
+}

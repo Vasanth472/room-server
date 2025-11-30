@@ -1,6 +1,6 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const Member = require('./models/Member');
 
 const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/room_expense';
