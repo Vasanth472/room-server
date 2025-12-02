@@ -64,11 +64,7 @@ async function seedDefaultMembers() {
           addedDate: new Date()
         }
       ]);
-      console.log('Default members seeded successfully');
-      console.log('Test credentials:');
-      console.log('  Admin: phone=9000000001, password=admin123');
-      console.log('  User 1: phone=9000000002, password=user123');
-      console.log('  User 2: phone=9000000003, password=user123');
+      console.log('Default members created:');
     }
   } catch (err) {
     console.error('Error seeding members:', err);
